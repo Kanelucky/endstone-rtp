@@ -31,8 +31,6 @@ unknown-dimension = "Unknown dimension!"
 |---|---|-----------------|
 | `/rtp` | Teleport to a random location | `rtp.command.rtp` |
 
-Command /rtp 
-
 ## License
 
 This project is licensed under MIT license. See [LICENSE](LICENSE) for more.
