@@ -31,6 +31,7 @@ class RTP(Plugin):
     def __init__(self):
         super().__init__()
         self.rtp_jobs = {}
+        self.rtp_cooldowns = {}
         self.rtp_task = None
         self.rtp_counter = 0
 
@@ -78,7 +79,7 @@ class RTP(Plugin):
         dimension_name = self.normalize_dimension(dimension)
         if dimension_name is None:
             sender.send_error_message(self.get_message_config("unknown-dimension"))
-            return
+            return False
         radius = self.config.get("radius")
 
         self.rtp_counter += 1
@@ -106,13 +107,13 @@ class RTP(Plugin):
             "attempts": 0,
         }
 
-        key = id(sender)
+        key = str(sender.unique_id)
         self.rtp_jobs[key] = job
 
         if not self.prepare_rtp_target(job):
             self.remove_rtp_job(key)
             sender.send_error_message(self.get_message_config("failed-to-create-ticking-area"))
-            return
+            return False
 
         sender.send_message(self.get_message_config("loading-destination-chunks"))
 
@@ -123,6 +124,8 @@ class RTP(Plugin):
                 delay=1,
                 period=1
             )
+
+        return True
 
     def dispatch(self, command):
         errors = []
@@ -172,8 +175,8 @@ class RTP(Plugin):
 
                     if job["attempts"] >= max_attempts:
                         sender.send_error_message(
-                            self.get_message_config(
-                                "could-not-find-safe-loc".replace("{max_attempts}", str(max_attempts))
+                            self.get_message_config("could-not-find-safe-loc").replace(
+                                "{max_attempts}", str(max_attempts)
                             )
                         )
                         self.remove_rtp_job(key)
@@ -287,13 +290,29 @@ class RTP(Plugin):
     def on_command(self, sender: CommandSender, command: Command, args: list[str]) -> bool:
         if command.name != "rtp":
             return False
+
         if not isinstance(sender, Player):
             sender.send_error_message(self.get_message_config("invalid-sender"))
             return True
-        if id(sender) in self.rtp_jobs:
-            sender.send_error_message(self.get_message_config("already-have-rtp-request"))
+        key = str(sender.unique_id)
+        if key in self.rtp_jobs:
+            sender.send_error_message(
+                self.get_message_config("already-have-rtp-request")
+            )
             return True
-        self.start_rtp(sender)
+        cooldown = self.config.get("cooldown")
+        now = time.monotonic()
+        last_used = self.rtp_cooldowns.get(key)
+        if last_used is not None:
+            remaining = cooldown - (now - last_used)
+            if remaining > 0:
+                sender.send_error_message(
+                    self.get_message_config("cooldown")
+                    .replace("{cooldown}", str(int(remaining) + 1))
+                )
+                return True
+        if self.start_rtp(sender):
+            self.rtp_cooldowns[key] = time.monotonic()
         return True
 
     def get_message_config(self, option: str) -> str:

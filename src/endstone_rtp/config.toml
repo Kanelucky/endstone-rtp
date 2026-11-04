@@ -4,6 +4,8 @@ blacklist_blocks = [
     "minecraft:lava"
 ]
 max_attempts = 10
+# the cooldown (s)
+cooldown = 10
 [messages]
 invalid-sender = "Only players can use this command!"
 already-have-rtp-request = "You already have an RTP request!"
@@ -14,3 +16,4 @@ chunk-loading-timed-out = "Chunk loading timed out!"
 failed-to-create-ticking-area = "Failed to create ticking area!"
 failed-to-load-next-loc = "Failed to load the next location!"
 unknown-dimension = "Unknown dimension!"
+cooldown = "Please wait {cooldown} seconds before using RTP again!"
