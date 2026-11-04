@@ -106,7 +106,7 @@ class RTP(Plugin):
             "attempts": 0,
         }
 
-        key = id(sender)
+        key = str(sender.unique_id)
         self.rtp_jobs[key] = job
 
         if not self.prepare_rtp_target(job):
@@ -290,7 +290,7 @@ class RTP(Plugin):
         if not isinstance(sender, Player):
             sender.send_error_message(self.get_message_config("invalid-sender"))
             return True
-        if id(sender) in self.rtp_jobs:
+        if sender.unique_id in self.rtp_jobs:
             sender.send_error_message(self.get_message_config("already-have-rtp-request"))
             return True
         self.start_rtp(sender)

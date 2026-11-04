@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "endstone-rtp"
-version = "0.1.0"
+version = "0.1.1"
 authors = [{name = "Kanelucky"}]
 description = "My first Python plugin for Endstone servers!"
 
